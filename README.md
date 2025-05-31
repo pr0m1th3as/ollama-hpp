@@ -57,6 +57,7 @@ The test cases do a good job of providing discrete examples for each of the API 
     - [Embedding Generation](#embedding-generation)
     - [Debug Information](#debug-information)
     - [Manual Requests](#manual-requests)
+    - [Thinking](#thinking)
     - [Handling Context](#handling-context)
     - [Context Length](#context-length)
   - [Single-header vs Separate Headers](#single-header-vs-separate-headers)
@@ -424,6 +425,24 @@ request["system"] = "Talk like a pirate for the next reply."
 std::cout << ollama::generate(request) << std::endl;
 ```
 This provides the most customization of the request. Users should take care to ensure that valid fields are provided, otherwise an exception will likely be thrown on response. Manual requests can be made for generate, chat, and embedding endpoints.
+
+### Thinking
+Models which support [thinking](https://ollama.com/blog/thinking) can be supported through manual requests:
+
+```C++
+ollama::request request(ollama::message_type::generation);
+
+request["think"]=true;
+request["model"]="qwen3:14b";
+request["prompt"]="Why is the sky blue?";
+request["system"]="Respond as though you are an experienced meteorologist.";
+
+ollama::response response = ollama::generate(request);
+
+std::cout << "Model thoughts:" << response.as_json()["thinking"] << std::endl;
+std::cout << "Model response:" << response << std::endl;
+```
+Model thoughts can also be handled with a streaming response in order to see tokens from thought in real time.
 
 ### Handling Context
 Context from previous generate requests can be used by including a past `ollama::response` with `generate`:
