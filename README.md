@@ -1,5 +1,5 @@
 # ollama-hpp
-Modern, Header-only C++11-20 bindings for the [Ollama](https://ollama.ai) API.
+Modern, Header-only C++11-26 bindings for the [Ollama](https://ollama.ai) API.
 
 Access the full power of local language models in C++ with just a few lines of code:
 
