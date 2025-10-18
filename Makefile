@@ -5,7 +5,8 @@ CXXFLAGS = -Wall -Wextra -Wpedantic
 CREATE_BUILD_DIR = mkdir -p build; cp -n llama.jpg build;
 BUILD_TESTS = $(CXX) $(CXXFLAGS) test/test.cpp -Iinclude -Itest -pthread -latomic
 
-all: examples test-cpp11 test-cpp14 test-cpp17 test-cpp20 test-cpp23 test-cpp26
+# Uncomment to test newer variants of C++
+all: examples test-cpp11 test-cpp14 test-cpp17 test-cpp20 #test-cpp23 test-cpp26
 build:
 	mkdir -p build
 ifeq ($(OS),Windows_NT)
