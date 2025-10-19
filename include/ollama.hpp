@@ -61,9 +61,17 @@
 */
 #include "Base64.h"
 
+/*
+    A lightweight, header-only implementation of sha256 hashing. This is used for blob verifcation when uploading
+    GGUF files to Ollama.
+    No license is necessary for this code.
+*/
+#include "sha256.hpp"
+
 #include <string>
 #include <memory>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <numeric>
 #include <functional>
@@ -689,9 +697,18 @@ class Ollama
         return false;
     }
 
-    bool create_blob(const std::string& digest)
+    bool create_blob(const std::string& gguf_file)
     {
-        if (auto res = cli->Post("/api/blobs/"+digest))
+
+        // Path and hash (as in your curl command)
+        //const std::string path = "/api/blobs/sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2";
+
+        // Read the contents of a GGUF file and create a hash from the contents
+        std::string file_contents = read_file_to_string(gguf_file);
+        std::string digest = "sha256:"+hash::sha256(file_contents);
+
+        // Send the file contents and hash to the server
+        if (auto res = cli->Post("/api/blobs/"+digest, file_contents, "application/octet-stream"))
         {
             if (res->status==httplib::StatusCode::Created_201) return true;
             if (res->status==httplib::StatusCode::BadRequest_400) { if (ollama::use_exceptions) throw ollama::exception("Received bad request (Code 400) from Ollama server when creating blob."); }            
@@ -876,6 +893,16 @@ class Ollama
     }
 
     private:
+
+    inline std::string read_file_to_string(const std::string& path) {
+        std::ifstream in(path.c_str(), std::ios::in | std::ios::binary);
+        if (!in) {
+            throw std::runtime_error("read_file_to_string: cannot open '" + path + "'");
+        }
+        std::ostringstream ss;
+        ss << in.rdbuf();           // streambuf -> string, efficient and simple
+        return ss.str();
+    }
 
 /*
     bool send_request(const ollama::request& request, std::function<bool(const ollama::response&)> on_receive_response=nullptr)
