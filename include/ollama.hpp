@@ -385,6 +385,7 @@ class Ollama
             this->cli = new httplib::Client(url);
             this->setReadTimeout(120);
             this->setWriteTimeout(120);
+            this->setConnectionTimeout(120);
         }
 
         Ollama(): Ollama("http://localhost:11434") {}
@@ -904,6 +905,11 @@ class Ollama
         this->cli->set_write_timeout(seconds);
     }
 
+    void setConnectionTimeout(const int seconds)
+    {
+        this->cli->set_connection_timeout(seconds);
+    }
+
     private:
 
     inline std::string read_file_to_string(const std::string& path) {
@@ -1083,6 +1089,11 @@ namespace ollama
     inline void setWriteTimeout(const int seconds)
     {
         ollama.setWriteTimeout(seconds);
+    }
+
+    inline void setConnectionTimeout(const int seconds)
+    {
+        ollama.setConnectionTimeout(seconds);
     }
 
 }
