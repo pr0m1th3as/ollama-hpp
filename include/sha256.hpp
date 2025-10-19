@@ -8,7 +8,7 @@
 //   std::string h2 = sha256("hello", true);    // little-endian hex per 32-bit word
 //
 // Public API:
-//   inline std::string sha256(const std::string& s, bool little_endian=true);
+//   inline std::string sha256(const std::string& s, bool little_endian=false);
 
 #include <array>
 #include <cstdint>
@@ -20,7 +20,7 @@
 namespace hash
 {
 
-    inline std::string sha256(const std::string& s, bool little_endian = true) {
+    inline std::string sha256(const std::string& s, bool little_endian = false) {
         // --- helpers (C++11 lambdas) ---
         const auto ROTR = [](uint32_t x, uint32_t n) -> uint32_t {
             return (x >> n) | (x << (32u - n));
