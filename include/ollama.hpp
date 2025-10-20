@@ -62,8 +62,8 @@
 #include "Base64.h"
 
 /*
-    A lightweight, header-only implementation of sha256 hashing. This is used for blob verifcation when uploading
-    GGUF files to Ollama.
+    sha256.hpp is a lightweight, header-only implementation of sha256 hashing. 
+    This is used for blob verifcation when uploading GGUF files to Ollama.
     No license is necessary for this code.
 */
 #include "sha256.hpp"
