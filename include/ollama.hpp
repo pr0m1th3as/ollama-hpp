@@ -383,9 +383,11 @@ class Ollama
         {
             this->server_url = url;
             this->cli = new httplib::Client(url);
-            this->setReadTimeout(120);
-            this->setWriteTimeout(120);
-            this->setConnectionTimeout(120);
+            this->cli->set_keep_alive(true);
+
+            this->setReadTimeout(60);
+            this->setWriteTimeout(60);
+            this->setConnectionTimeout(60);
         }
 
         Ollama(): Ollama("http://localhost:11434") {}
@@ -692,7 +694,8 @@ class Ollama
         if (auto res = cli->Head("/api/blobs/"+digest))
         {
             if (res->status==httplib::StatusCode::OK_200) return true;
-            if (res->status==httplib::StatusCode::NotFound_404) return false;            
+            if (res->status==httplib::StatusCode::NotFound_404) return false;
+            
         }
         else { if (ollama::use_exceptions) throw ollama::exception("No response returned from server when checking if blob exists: "+httplib::to_string( res.error() ) );}        
 
@@ -702,25 +705,26 @@ class Ollama
     std::string create_blob(const std::string& gguf_file)
     {
 
-        // Path and hash (as in your curl command)
-        //const std::string path = "/api/blobs/sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2";
-
-
+        try
+        {        
             // Read the contents of a GGUF file and create a hash from the contents
             std::string file_contents = read_file_to_string(gguf_file);
             std::string digest = "sha256:"+hash::sha256(file_contents);
-            std::cout << "Digest was "+digest << std::endl;
+            //std::cout << "Digest was "+digest << std::endl;
 
-            std::cout << "Uploading blob.";
-        try
-        {
+            if (blob_exists(digest))
+            {
+                if (ollama::use_exceptions) throw ollama::exception("Blob already exists for digest: "+digest);
+                return "";
+            }
+
             // Send the file contents and hash to the server
             if (auto res = cli->Post("/api/blobs/"+digest, file_contents, "application/octet-stream"))
             {
                 if (res->status==httplib::StatusCode::Created_201) return digest;
                 if (res->status==httplib::StatusCode::BadRequest_400) { if (ollama::use_exceptions) throw ollama::exception("Received bad request (Code 400) from Ollama server when creating blob."); }            
             }
-            else { if (ollama::use_exceptions) throw ollama::exception("No response returned from server when creating blob: "+httplib::to_string( res.error() ) );}        
+            else { std::cout << "No response" << std::endl; if (ollama::use_exceptions) throw ollama::exception("No response returned from server when creating blob: "+httplib::to_string( res.error() ) );}        
         }
         catch(std::runtime_error& e)
         {
