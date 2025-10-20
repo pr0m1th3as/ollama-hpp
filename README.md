@@ -411,17 +411,17 @@ ollama::response response =
 Blobs (Binary Large Objects) can be generated from a specified GGUF model. The sha256 hash will be automatically computed from the file and sent to the ollama server in the request.
 
 ```C++
-    // Create a blob on the ollama server from a GGUF file. Download the following GGUF file to test this:
-    // wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q2_K.gguf
-    try
-    { 
-      std::string digest = ollama::create_blob("tinyllama-1.1b-chat-v1.0.Q2_K.gguf"); 
-      std::cout << "Blob was created on Ollama server with digest: " << digest << std::endl; 
-    }
-    catch( ollama::exception& e) 
-    { 
-      std::cout << "Error when creating blob: " << e.what() << std::endl;
-    }
+// Create a blob on the ollama server from a GGUF file. Example file:
+// wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q2_K.gguf
+try
+{ 
+  std::string digest = ollama::create_blob("tinyllama-1.1b-chat-v1.0.Q2_K.gguf"); 
+  std::cout << "Blob was created on Ollama server with digest: " << digest << std::endl; 
+}
+catch( ollama::exception& e) 
+{ 
+  std::cout << "Error when creating blob: " << e.what() << std::endl;
+}
 ```
 If successful, `create_blob` will return a string with the sha256 hash of the file that was uploaded. If unsuccessful, an exception will be thrown or `create_blob` will return an empty string if exceptions are disabled. 
 
@@ -431,9 +431,9 @@ You may have to increase read/write [timeouts](#Set-Server-Parameters) if you ha
 You can check if a blob exists on the ollama server using the sha256 hash of the uploaded file:
 
 ```C++
-    // Check if a blob with the following digest exists.
-    if ( ollama::blob_exists("sha256:030a469a63576d59f601ef5608846b7718eaa884dd820e9aa7493efec1788afa") ) 
-      std::cout << "Blob exists on Ollama server." << std::endl; 
+// Check if a blob with the following digest exists.
+if ( ollama::blob_exists("sha256:030a469a63576d59f601ef5608846b7718eaa884dd820e9aa7493efec1788afa") ) 
+  std::cout << "Blob exists on Ollama server." << std::endl; 
 ```
 `blob_exists` will return true if a blob with this hash is already present on the server, otherwise it will return false.
 
