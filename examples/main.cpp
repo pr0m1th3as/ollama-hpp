@@ -62,12 +62,13 @@ int main()
     json model_info = ollama::show_model_info("llama3:8b");
     std::cout << "Model family is " << model_info["details"]["family"] << std::endl;
 
-    // Create a blob on the ollama server using the following digest
-    try { ollama::create_blob("sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2"); std::cout << "Blob was created on Ollama server." << std::endl; }
-    catch( ollama::exception& e) { std::cout << "Error when creating blob: " << e.what() << std::endl;} 
+    // Create a blob on the ollama server from a GGUF file. Download the following GGUF file to test this: wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q2_K.gguf
+    // You may have to increase read/write timeouts if you have a very large model being uploaded
+    try { std::string digest = ollama::create_blob("tinyllama-1.1b-chat-v1.0.Q2_K.gguf"); std::cout << "Blob was created on Ollama server with digest: " << digest << std::endl; }
+    catch( ollama::exception& e) { std::cout << "Error when creating blob: " << e.what() << std::endl;}
 
     // Check if a blob with the following digest exists.
-    if ( ollama::blob_exists("sha256:29fdb92e57cf0827ded04ae6461b5931d01fa595843f55d36f5b275a52087dd2") ) std::cout << "Blob exists on Ollama server." << std::endl; 
+    if ( ollama::blob_exists("sha256:030a469a63576d59f601ef5608846b7718eaa884dd820e9aa7493efec1788afa") ) std::cout << "Blob exists on Ollama server." << std::endl; 
 
     // List the models available locally in the ollama server
     std::vector<std::string> models = ollama::list_models();    

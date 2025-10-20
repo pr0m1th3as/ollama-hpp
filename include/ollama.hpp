@@ -61,9 +61,17 @@
 */
 #include "Base64.h"
 
+/*
+    A lightweight, header-only implementation of sha256 hashing. This is used for blob verifcation when uploading
+    GGUF files to Ollama.
+    No license is necessary for this code.
+*/
+#include "sha256.hpp"
+
 #include <string>
 #include <memory>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <numeric>
 #include <functional>
@@ -375,7 +383,11 @@ class Ollama
         {
             this->server_url = url;
             this->cli = new httplib::Client(url);
-            this->setReadTimeout(120);
+            this->cli->set_keep_alive(true);
+
+            this->setReadTimeout(60);
+            this->setWriteTimeout(60);
+            this->setConnectionTimeout(60);
         }
 
         Ollama(): Ollama("http://localhost:11434") {}
@@ -682,23 +694,45 @@ class Ollama
         if (auto res = cli->Head("/api/blobs/"+digest))
         {
             if (res->status==httplib::StatusCode::OK_200) return true;
-            if (res->status==httplib::StatusCode::NotFound_404) return false;            
+            if (res->status==httplib::StatusCode::NotFound_404) return false;
+            
         }
         else { if (ollama::use_exceptions) throw ollama::exception("No response returned from server when checking if blob exists: "+httplib::to_string( res.error() ) );}        
 
         return false;
     }
 
-    bool create_blob(const std::string& digest)
+    std::string create_blob(const std::string& gguf_file)
     {
-        if (auto res = cli->Post("/api/blobs/"+digest))
-        {
-            if (res->status==httplib::StatusCode::Created_201) return true;
-            if (res->status==httplib::StatusCode::BadRequest_400) { if (ollama::use_exceptions) throw ollama::exception("Received bad request (Code 400) from Ollama server when creating blob."); }            
-        }
-        else { if (ollama::use_exceptions) throw ollama::exception("No response returned from server when creating blob: "+httplib::to_string( res.error() ) );}        
 
-        return false;
+        try
+        {        
+            // Read the contents of a GGUF file and create a hash from the contents
+            std::string file_contents = read_file_to_string(gguf_file);
+            std::string digest = "sha256:"+hash::sha256(file_contents);
+            //std::cout << "Digest was "+digest << std::endl;
+
+            if (blob_exists(digest))
+            {
+                if (ollama::use_exceptions) throw ollama::exception("Blob already exists for digest: "+digest);
+                return "";
+            }
+
+            // Send the file contents and hash to the server
+            if (auto res = cli->Post("/api/blobs/"+digest, file_contents, "application/octet-stream"))
+            {
+                if (res->status==httplib::StatusCode::Created_201) return digest;
+                if (res->status==httplib::StatusCode::BadRequest_400) { if (ollama::use_exceptions) throw ollama::exception("Received bad request (Code 400) from Ollama server when creating blob."); }            
+            }
+            else { std::cout << "No response" << std::endl; if (ollama::use_exceptions) throw ollama::exception("No response returned from server when creating blob: "+httplib::to_string( res.error() ) );}        
+        }
+        catch(std::runtime_error& e)
+        {
+            if (ollama::use_exceptions) throw ollama::exception("Unable to open GGUF Model file: "+gguf_file);
+        }        
+
+        // Return an empty hash if upload failed
+        return "";
 
     }
 
@@ -875,7 +909,22 @@ class Ollama
         this->cli->set_write_timeout(seconds);
     }
 
+    void setConnectionTimeout(const int seconds)
+    {
+        this->cli->set_connection_timeout(seconds);
+    }
+
     private:
+
+    inline std::string read_file_to_string(const std::string& path) {
+        std::ifstream in(path.c_str(), std::ios::in | std::ios::binary);
+        if (!in) {
+            throw std::runtime_error("read_file_to_string: cannot open '" + path + "'");
+        }
+        std::ostringstream ss;
+        ss << in.rdbuf();           // streambuf -> string, efficient and simple
+        return ss.str();
+    }
 
 /*
     bool send_request(const ollama::request& request, std::function<bool(const ollama::response&)> on_receive_response=nullptr)
@@ -996,9 +1045,9 @@ namespace ollama
         return ollama.blob_exists(digest);
     }
 
-    inline bool create_blob(const std::string& digest)
+    inline std::string create_blob(const std::string& gguf_file)
     {
-        return ollama.create_blob(digest);
+        return ollama.create_blob(gguf_file);
     }
 
     inline json show_model_info(const std::string& model, bool verbose=false)
@@ -1036,14 +1085,19 @@ namespace ollama
         return ollama.generate_embeddings(request);
     }
 
-    inline void setReadTimeout(const int& seconds)
+    inline void setReadTimeout(const int seconds)
     {
         ollama.setReadTimeout(seconds);
     }
 
-    inline void setWriteTimeout(const int& seconds)
+    inline void setWriteTimeout(const int seconds)
     {
         ollama.setWriteTimeout(seconds);
+    }
+
+    inline void setConnectionTimeout(const int seconds)
+    {
+        ollama.setConnectionTimeout(seconds);
     }
 
 }
