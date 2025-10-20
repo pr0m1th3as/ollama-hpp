@@ -413,11 +413,20 @@ Blobs (Binary Large Objects) can be generated from a specified GGUF model. The s
 ```C++
     // Create a blob on the ollama server from a GGUF file. Download the following GGUF file to test this:
     // wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q2_K.gguf
-    // You may have to increase read/write timeouts if you have a very large model being uploaded
-    try { std::string digest = ollama::create_blob("tinyllama-1.1b-chat-v1.0.Q2_K.gguf"); std::cout << "Blob was created on Ollama server with digest: " << digest << std::endl; }
-    catch( ollama::exception& e) { std::cout << "Error when creating blob: " << e.what() << std::endl;}
+    try
+    { 
+      std::string digest = ollama::create_blob("tinyllama-1.1b-chat-v1.0.Q2_K.gguf"); 
+      std::cout << "Blob was created on Ollama server with digest: " << digest << std::endl; 
+    }
+    catch( ollama::exception& e) 
+    { 
+      std::cout << "Error when creating blob: " << e.what() << std::endl;
+    }
 ```
-If successful, `create_blob` will return a string with the sha256 hash of the file that was uploaded. If unsuccessful, an exception will be thrown or `create_blob` will return an empty string if exceptions are disabled.
+If successful, `create_blob` will return a string with the sha256 hash of the file that was uploaded. If unsuccessful, an exception will be thrown or `create_blob` will return an empty string if exceptions are disabled. 
+
+You may have to increase read/write [timeouts](#Set-Server-Parameters) if you have a very large model being uploaded.
+
 
 You can check if a blob exists on the ollama server using the sha256 hash of the uploaded file:
 
