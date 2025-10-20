@@ -55,6 +55,7 @@ The test cases do a good job of providing discrete examples for each of the API 
     - [Streaming Chat Generation](#streaming-chat-generation)
     - [Chat with Images](#chat-with-images)
     - [Embedding Generation](#embedding-generation)
+    - [Create Blobs](#create-blobs)
     - [Debug Information](#debug-information)
     - [Manual Requests](#manual-requests)
     - [Thinking](#thinking)
@@ -405,6 +406,27 @@ options["num_predict"] = 20;
 ollama::response response = 
   ollama::generate_embeddings("llama3:8b", "Why is the sky blue?", options);
 ```
+
+### Create Blobs
+Blobs (Binary Large Objects) can be generated from a specified GGUF model. The sha256 hash will be automatically computed from the file and sent to the ollama server in the request.
+
+```C++
+    // Create a blob on the ollama server from a GGUF file. Download the following GGUF file to test this:
+    // wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q2_K.gguf
+    // You may have to increase read/write timeouts if you have a very large model being uploaded
+    try { std::string digest = ollama::create_blob("tinyllama-1.1b-chat-v1.0.Q2_K.gguf"); std::cout << "Blob was created on Ollama server with digest: " << digest << std::endl; }
+    catch( ollama::exception& e) { std::cout << "Error when creating blob: " << e.what() << std::endl;}
+```
+If successful, `create_blob` will return a string with the sha256 hash of the file that was uploaded. If unsuccessful, an exception will be thrown or `create_blob` will return an empty string if exceptions are disabled.
+
+You can check if a blob exists on the ollama server using the sha256 hash of the uploaded file:
+
+```C++
+    // Check if a blob with the following digest exists.
+    if ( ollama::blob_exists("sha256:030a469a63576d59f601ef5608846b7718eaa884dd820e9aa7493efec1788afa") ) 
+      std::cout << "Blob exists on Ollama server." << std::endl; 
+```
+`blob_exists` will return true if a blob with this hash is already present on the server, otherwise it will return false.
 
 ### Debug Information
 Debug logging for requests and replies to the server can easily be turned on and off. This is useful if you want to see the actual JSON sent and received from the server.
