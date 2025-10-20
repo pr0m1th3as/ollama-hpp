@@ -1039,6 +1039,11 @@ namespace ollama
         return ollama.load_model(model);
     }
 
+    inline bool unload_model(const std::string& model)
+    {
+        return ollama.load_model(model);
+    }
+
     inline std::string get_version()
     {
         return ollama.get_version();
