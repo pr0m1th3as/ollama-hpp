@@ -408,7 +408,7 @@ ollama::response response =
 ```
 
 ### Create Blobs
-Blobs (Binary Large Objects) can be generated from a specified GGUF model. The sha256 hash will be automatically computed from the file and sent to the ollama server in the request.
+Blobs (Binary Large Objects) containing model weights can be generated from a specified GGUF model. The SHA256 hash will be automatically computed from the file and sent to the ollama server in the request.
 
 ```C++
 // Create a blob on the ollama server from a GGUF file. Example file:
@@ -423,12 +423,11 @@ catch( ollama::exception& e)
   std::cout << "Error when creating blob: " << e.what() << std::endl;
 }
 ```
-If successful, `create_blob` will return a string with the sha256 hash of the file that was uploaded. If unsuccessful, an exception will be thrown or `create_blob` will return an empty string if exceptions are disabled. 
+If successful, `create_blob` will return a string with the SHA256 hash of the file that was uploaded. If unsuccessful, an exception will be thrown or `create_blob` will return an empty string if exceptions are disabled. 
 
 You may have to increase read/write [timeouts](#Set-Server-Parameters) if you have a very large model being uploaded.
 
-
-You can check if a blob exists on the ollama server using the sha256 hash of the uploaded file:
+You can check if a blob exists on the ollama server using the SHA256 hash of the uploaded file:
 
 ```C++
 // Check if a blob with the following digest exists.
